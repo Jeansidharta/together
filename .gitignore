@@ -32,3 +32,9 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# Temp files
+__*
+
+# Debug
+debug.ts

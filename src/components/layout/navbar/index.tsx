@@ -65,6 +65,6 @@ const Navbar: NavbarComponent = () => {
 			</LinksContainer>
 		</Root>
 	);
-}
+};
 
 export default Navbar;

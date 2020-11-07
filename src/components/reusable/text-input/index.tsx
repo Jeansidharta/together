@@ -24,16 +24,16 @@ type TextInputComponent = React.FunctionComponent<TextInputProps>;
 /**
 * This is the application's default text input component
 */
-const TextInput: TextInputComponent = ({ label, ref, numberOfLines = 1, ...props }) => {
+const TextInput: TextInputComponent = ({ label, ref: _ref, numberOfLines = 1, ...props }) => {
 	return (
 		<Root {...props}>
 			{label}
-			{ numberOfLines === 1
-				? <Input />
-				: <TextArea />
+			{ numberOfLines === 1 ?
+				<Input /> :
+				<TextArea />
 			}
 		</Root>
 	);
-}
+};
 
 export default TextInput;

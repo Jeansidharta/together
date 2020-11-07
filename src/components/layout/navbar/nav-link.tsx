@@ -23,16 +23,16 @@ const Anchor = styled.a`
 `;
 
 type NavLinkProps = React.PropsWithChildren<{
-	/** The ID of the document object to scroll to */
-	idToFocus: string,
+  /** The ID of the document object to scroll to */
+  idToFocus: string,
 }> & React.ComponentProps<'li'>;
 
 type NavLinkComponent = React.FunctionComponent<NavLinkProps>;
 
 const NavLink: NavLinkComponent = ({
-	idToFocus,
+	idToFocus: _idToFocus,
 	children,
-	ref,
+	ref: _ref,
 	onClick,
 	...props
 }) => {
@@ -43,6 +43,6 @@ const NavLink: NavLinkComponent = ({
 			</Anchor>
 		</Root>
 	);
-}
+};
 
 export default NavLink;

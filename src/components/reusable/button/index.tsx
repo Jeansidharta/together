@@ -22,10 +22,10 @@ const Root = styled.button<{
 	border-radius: 8px;
 	background-color: ${({ backgroundColor, theme }) =>
 		typeof backgroundColor === 'string' ? backgroundColor : backgroundColor(theme)
-	};
+};
 	color: ${({ textColor, theme }) =>
 		typeof textColor === 'string' ? textColor : textColor(theme)
-	};
+};
 	:hover, :focus {
 		transform: scale(${({ hoverScaleOffset }) => 1 + hoverScaleOffset});
 	}
@@ -65,7 +65,7 @@ const Button: ButtonComponent = ({
 	hoverScaleOffset = 0.1,
 	backgroundColor = (theme: DefaultTheme) => theme.colors.action.main,
 	textColor = 'rgba(0, 0, 0, 0.8)',
-	ref,
+	ref: _ref,
 	...props
 }) => {
 
@@ -80,6 +80,6 @@ const Button: ButtonComponent = ({
 			{content}
 		</Root>
 	);
-}
+};
 
 export default Button;

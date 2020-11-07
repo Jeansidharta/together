@@ -1,4 +1,4 @@
-/***************************************************************************
+/** *************************************************************************
 *                         What is this file?                               *
 *                                                                          *
 * This file is responsible for declaring the styled-components theme       *
@@ -53,8 +53,8 @@ type HoverableShadow = {
 
 
 // This will "merge" `styled-component`'s DefaultTheme type with our custom theme type.
-declare module "styled-components" {
-  export interface DefaultTheme {
+declare module 'styled-components' {
+	export interface DefaultTheme {
 		/** color-related stuff, for pages with primary and secondary colors. */
 		colors: {
 			primary: GradientColor,
@@ -109,7 +109,7 @@ declare module "styled-components" {
 			/** Screen-size related queries, that uses the `max-width` filter */
 			maxScreen: ScreenSizeQuery,
 		},
-  }
+	}
 }
 
 /* TODO - replace this with an actual color. */
@@ -235,8 +235,8 @@ const theme: DefaultTheme = {
 	},
 };
 
-function FilledThemeProvider ({ ...props }) {
-	return <ThemeProvider theme={theme} {...props} />
+function FilledThemeProvider({ ...props }) {
+	return <ThemeProvider theme={theme} {...props} />;
 }
 
 export default FilledThemeProvider;

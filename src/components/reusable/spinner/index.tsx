@@ -45,7 +45,7 @@ const Spinner: SpinnerComponent = ({
 	size = 40,
 	strokeWidth = 2,
 	color = 'black',
-	ref,
+	ref: _ref,
 	...props
 }) => {
 	const animation = React.useRef(keyframes`
@@ -71,7 +71,7 @@ const Spinner: SpinnerComponent = ({
 			size={size}
 			color={color}
 		/>
-	</SVG>
-}
+	</SVG>;
+};
 
 export default Spinner;

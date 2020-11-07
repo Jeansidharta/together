@@ -15,7 +15,7 @@ type MyAppProps = React.PropsWithoutRef<{
 type MyAppComponent = React.FunctionComponent<MyAppProps>;
 
 const MyApp: MyAppComponent = ({ Component, pageProps }) => {
-  return (
+	return (
 		<>
 			<Head>
 				{/* Global styling */}
@@ -51,6 +51,6 @@ const MyApp: MyAppComponent = ({ Component, pageProps }) => {
 			</FilledThemeProvider>
 		</>
 	);
-}
+};
 
-export default MyApp
+export default MyApp;

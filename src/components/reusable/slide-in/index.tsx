@@ -6,12 +6,12 @@ const Root = styled.div`
 `;
 
 type SlideInProps = React.PropsWithoutRef<{
-	/** The animation duration. */
-	duration?: number,
-	/** The offset that the component will move when sliding. */
-	offset?: number,
-	/** The direction the animation will occur. */
-	direction: 'up' | 'down' | 'left' | 'right',
+  /** The animation duration. */
+  duration?: number,
+  /** The offset that the component will move when sliding. */
+  offset?: number,
+  /** The direction the animation will occur. */
+  direction: 'up' | 'down' | 'left' | 'right',
 }>;
 
 type SlideInComponent = React.FunctionComponent<SlideInProps>;
@@ -30,10 +30,13 @@ const SlideIn: SlideInComponent = ({ duration = 2000, direction, offset = 100, c
 	}, []);
 
 	return (
-		<Root ref={rootRef} style={{ transition: `${duration}ms`, [direction]: offset + 'px', opacity: 0 }}>
+		<Root
+			ref={rootRef}
+			style={{ transition: `${duration}ms`, [direction]: offset + 'px', opacity: 0 }}
+		>
 			{children}
 		</Root>
 	);
-}
+};
 
 export default SlideIn;

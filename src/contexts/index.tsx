@@ -5,7 +5,7 @@ import React from 'react';
 const Providers: React.FunctionComponent<React.PropsWithChildren<{}>> = ({ children }) => {
 	return <>
 		{children}
-	</>
-}
+	</>;
+};
 
-export default  Providers;
+export default Providers;

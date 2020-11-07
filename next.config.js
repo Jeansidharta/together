@@ -4,10 +4,10 @@ module.exports = {
 		{ dev, dir, outDir, distDir, buildId }
 	) {
 		return {
-		...defaultPathMap,
-		// Add your reroutes here. Example:
-		// Reroutes the '/' path to '/home'
-		// '/': { page: '/home' },
-		}
+			...defaultPathMap,
+			// Add your reroutes here. Example:
+			// Reroutes the '/' path to '/home'
+			// '/': { page: '/home' },
+		};
 	},
-}
+};

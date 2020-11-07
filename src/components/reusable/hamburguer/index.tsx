@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 import Styled from 'styled-components';
 
 const Root = Styled.button`
@@ -39,17 +39,18 @@ type HamburguerComponent = React.ForwardRefRenderFunction<HTMLButtonElement, Ham
 const Hamburguer: HamburguerComponent = ({
 	onOpen = (()=>{}),
 	onClose = (()=>{}),
-	animationTime = 200, //in milisseconds
+	animationTime = 200, // in milisseconds
 	value,
 	...props
 }, ref) => {
-	let [isOpenState, setIsOpenState] = React.useState<boolean>(value || false);
+	const [isOpenState, setIsOpenState] = React.useState<boolean>(value || false);
 
-	function handleClick () {
+	function handleClick() {
 		if (typeof value === 'undefined') {
 			// Value is not set, use the component's internal state.
 			setIsOpenState(!isOpenState);
-		} else {
+		}
+		else {
 			// Value is set. Don't touch the component's state
 			if (value) onClose();
 			else onOpen();
@@ -59,7 +60,7 @@ const Hamburguer: HamburguerComponent = ({
 	React.useEffect(()=>{
 		if (typeof value !== 'undefined') return;
 
-		if(isOpenState) onOpen();
+		if (isOpenState) onOpen();
 		else onClose();
 	}, [isOpenState, value]);
 
@@ -80,6 +81,6 @@ const Hamburguer: HamburguerComponent = ({
 			}}/>
 		</Root>
 	);
-}
+};
 
 export default React.forwardRef(Hamburguer);
