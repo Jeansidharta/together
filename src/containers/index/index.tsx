@@ -1,4 +1,5 @@
 import Head from 'next/head';
+import React from 'react';
 import styled from 'styled-components';
 import Footer from '../../components/layout/footer';
 import Navbar from '../../components/layout/navbar';
@@ -33,7 +34,7 @@ const getICEs = () => {
 
 
 	const sendChannel = localConnection.createDataChannel('sendChannel');
-	sendChannel.onmessage = e => console.log('messsage received!!!' + e.data);
+	sendChannel.onmessage = e => console.log('messsage received!!! ' + e.data);
 	sendChannel.onopen = () => console.log('open!!!!');
 	sendChannel.onclose = () => console.log('closed!!!!!!');
 
@@ -41,8 +42,6 @@ const getICEs = () => {
 	localConnection.createOffer().then(o => localConnection.setLocalDescription(o));
 
 };
-
-getICEs();
 
 const setupRemoteConnection = (offer: any) => {
 
@@ -57,7 +56,7 @@ const setupRemoteConnection = (offer: any) => {
 	remoteConnection.ondatachannel = event => {
 
 		const receiveChannel = event.channel;
-		receiveChannel.onmessage = e => console.log('messsage received!!!' + e.data);
+		receiveChannel.onmessage = e => console.log('messsage received!!! ' + e.data);
 		receiveChannel.onopen = () => {
 			console.log('open!!!!');
 		};
@@ -91,6 +90,9 @@ const sendP2PText = () => {
 
 export default function Home() {
 
+	React.useEffect(() => {
+		getICEs();
+	}, []);
 
 	return (
 		<>
