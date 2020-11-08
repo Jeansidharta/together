@@ -81,6 +81,13 @@ const p2pConnection = () => {
 	setupRemoteConnection(JSON.parse(ice));
 };
 
+const p2pAnswer = () => {
+	const answerInput = document.getElementById('answer') as HTMLInputElement;
+	const answer = answerInput.value;
+	answerInput.value = '';
+	localConnection.setRemoteDescription(JSON.parse(answer)).then(() => console.log('done'));
+};
+
 const sendP2PText = () => {
 	const textInput = document.getElementById('ice') as HTMLInputElement;
 	const text = textInput.value;
@@ -109,8 +116,10 @@ export default function Home() {
 				<h1>Hello!</h1>
 				<input id="ice" type="text" />
 				<button onClick={p2pConnection}>Connect (ICE)</button>
-				<br/>
-				<input id="text" type="text"/>
+				<input id="answer" type="text" />
+				<button onClick={p2pAnswer}>Answer (ICE)</button>
+				<br />
+				<input id="text" type="text" />
 				<button onClick={sendP2PText} >Send to connections</button>
 			</Main>
 			<Footer />
