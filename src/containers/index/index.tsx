@@ -29,12 +29,19 @@ const getICEs = () => {
 	localConnection = new RTCPeerConnection();
 	localConnection.onicecandidate = () => {
 		console.log(' NEW ice candidnat!! on localconnection reprinting SDP ');
+		const icesP = document.getElementById('ices')!;
+		icesP.innerText += JSON.stringify(localConnection.localDescription) + '\n\n';
 		console.log(JSON.stringify(localConnection.localDescription));
 	};
 
 
 	const sendChannel = localConnection.createDataChannel('sendChannel');
-	sendChannel.onmessage = e => console.log('messsage received!!! ' + e.data);
+	sendChannel.onmessage = e => {
+		console.log('messsage received!!! ' + e.data);
+		const messages = document.getElementById('message')!;
+		messages.innerText += '\n' + e.data;
+
+	};
 	sendChannel.onopen = () => console.log('open!!!!');
 	sendChannel.onclose = () => console.log('closed!!!!!!');
 
@@ -48,8 +55,10 @@ const setupRemoteConnection = (offer: any) => {
 	const remoteConnection = new RTCPeerConnection();
 
 	remoteConnection.onicecandidate = () => {
-		console.log(' NEW ice candidnat!! on localconnection reprinting SDP ');
+		console.log(' NEW answer! on localconnection reprinting SDP ');
 		console.log(JSON.stringify(remoteConnection.localDescription));
+		const answer = document.getElementById('answerText')!;
+		answer.innerText = '\n' + JSON.stringify(remoteConnection.localDescription);
 	};
 
 
@@ -89,10 +98,14 @@ const p2pAnswer = () => {
 };
 
 const sendP2PText = () => {
-	const textInput = document.getElementById('ice') as HTMLInputElement;
+	const textInput = document.getElementById('text') as HTMLInputElement;
 	const text = textInput.value;
 	textInput.value = '';
-	remoteConnections.forEach(remoteConnection => remoteConnection.send(text));
+	console.log('sendP2PText -> remoteConnections', remoteConnections);
+	const name = (document.getElementById('name') as HTMLInputElement).value;
+	remoteConnections.forEach(remoteConnection =>
+		remoteConnection.send(name ? `${name} ${text}` : `Guest: ${text}`)
+	);
 };
 
 export default function Home() {
@@ -114,13 +127,23 @@ export default function Home() {
 			<Navbar />
 			<Main>
 				<h1>Hello!</h1>
+				<input id="name" type="text" placeholder="Your name" />
+				<br />
 				<input id="ice" type="text" />
 				<button onClick={p2pConnection}>Connect (ICE)</button>
+				<br />
 				<input id="answer" type="text" />
 				<button onClick={p2pAnswer}>Answer (ICE)</button>
 				<br />
 				<input id="text" type="text" />
 				<button onClick={sendP2PText} >Send to connections</button>
+				<br /><br />
+				<p style={{ fontSize: '26px' }} >Messages</p>
+				<p id="message" style={{ fontSize: '16px' }} ></p>
+				<p style={{ fontSize: '26px' }} >Answer</p>
+				<p id="answerText" style={{ fontSize: '16px' }} >none yet</p>
+				<p style={{ fontSize: '26px' }} >Ices</p>
+				<p id="ices" style={{ fontSize: '16px' }} ></p>
 			</Main>
 			<Footer />
 		</>
