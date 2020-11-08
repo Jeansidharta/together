@@ -22,11 +22,11 @@ const JSONLD = `{
 	"image": "/images/logo.png"
 }`;
 
-const localConnection = new RTCPeerConnection();
+let localConnection: RTCPeerConnection;
 const remoteConnections: RTCDataChannel[] = [];
 
 const getICEs = () => {
-
+	localConnection = new RTCPeerConnection();
 	localConnection.onicecandidate = () => {
 		console.log(' NEW ice candidnat!! on localconnection reprinting SDP ');
 		console.log(JSON.stringify(localConnection.localDescription));
