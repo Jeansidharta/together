@@ -23,7 +23,7 @@ const JSONLD = `{
 }`;
 
 let localConnection: RTCPeerConnection;
-const remoteConnections: RTCDataChannel[] = [];
+const remoteConnections: { [id: number]: RTCDataChannel } = {};
 
 const getICEs = () => {
 	localConnection = new RTCPeerConnection();
@@ -68,9 +68,17 @@ const setupRemoteConnection = (offer: any) => {
 		receiveChannel.onmessage = e => console.log('messsage received!!! ' + e.data);
 		receiveChannel.onopen = () => {
 			console.log('open!!!!');
+			document.getElementById('connections')!.innerText += '\n' + receiveChannel.id!;
 		};
-		receiveChannel.onclose = () => console.log('closed!!!!!!');
-		remoteConnections.push(receiveChannel);
+		receiveChannel.onclose = () => {
+			delete remoteConnections[receiveChannel.id!];
+			const connectionsElement = document.getElementById('connections')!;
+			const lines = connectionsElement.innerText.split('\n');
+			lines.splice(lines.indexOf(String(receiveChannel.id!)));
+			connectionsElement.innerText = lines.join('\n');
+		};
+		console.log('setupRemoteConnection -> receiveChannel', receiveChannel);
+		remoteConnections[receiveChannel.id!] = receiveChannel;
 
 	};
 
@@ -103,8 +111,8 @@ const sendP2PText = () => {
 	textInput.value = '';
 	console.log('sendP2PText -> remoteConnections', remoteConnections);
 	const name = (document.getElementById('name') as HTMLInputElement).value;
-	remoteConnections.forEach(remoteConnection =>
-		remoteConnection.send(name ? `${name} ${text}` : `Guest: ${text}`)
+	Object.values(remoteConnections).forEach(remoteConnection =>
+		remoteConnection.send(name ? `${name}: ${text}` : `Guest: ${text}`)
 	);
 };
 
@@ -138,6 +146,8 @@ export default function Home() {
 				<input id="text" type="text" />
 				<button onClick={sendP2PText} >Send to connections</button>
 				<br /><br />
+				<p style={{ fontSize: '26px' }} >Connections</p>
+				<p id="connections" style={{ fontSize: '16px' }} ></p>
 				<p style={{ fontSize: '26px' }} >Messages</p>
 				<p id="message" style={{ fontSize: '16px' }} ></p>
 				<p style={{ fontSize: '26px' }} >Answer</p>
