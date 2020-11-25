@@ -139,7 +139,7 @@ export const Home = () => {
 			receiveChannel.onopen = () => {
 				console.log('open!!!!', receiveChannel);
 				connections.push(otherUserName!);
-				setConnections(connections);
+				// setConnections(connections);
 			};
 			receiveChannel.onclose = () => {
 				delete remoteConnections[receiveChannel.id!];
@@ -190,8 +190,11 @@ export const Home = () => {
 			const text = inputText.current.value;
 			inputText.current.value = '';
 			console.log('sendP2PText -> remoteConnections', remoteConnections);
+			const message = `${userName}: ${text}`;
+			messages.push(message);
+			setMessages(messages);
 			Object.values(remoteConnections).forEach(remoteConnection =>
-				remoteConnection.send(`${userName}: ${text}`)
+				remoteConnection.send(message)
 			);
 		}
 	};
