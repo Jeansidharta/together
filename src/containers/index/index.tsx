@@ -1,11 +1,9 @@
-import Axios from 'axios';
 import Head from 'next/head';
-import React, { useRef, useState } from 'react';
+import React from 'react';
 import styled from 'styled-components';
 import Footer from '../../components/layout/footer';
 import Navbar from '../../components/layout/navbar';
-import { useArrayState } from '../../libs/useArrayState';
-import { useLocalStorage } from '../../libs/useLocalStorage';
+import { WebRTCChat } from '../WebRTCChat';
 
 const Main = styled.div`
 	width: 100%;
@@ -25,184 +23,7 @@ const JSONLD = `{
 	"image": "/images/logo.png"
 }`;
 
-let localConnection: RTCPeerConnection;
-const remoteConnections: { [id: number]: RTCDataChannel } = {};
-
-const firebaseFunctions = Axios.create(
-	{ baseURL: 'https://us-central1-together-748f7.cloudfunctions.net/api/' }
-);
-
 export const Home = () => {
-
-	let [userName, setUserName] = useLocalStorage<string>('userName', '');
-	const [answerText, setAnswerText] = useState<string>('None yet');
-
-	const [ices, setIces] = useArrayState<string>([]);
-	const [connections, setConnections] = useArrayState<string>([]);
-	const [messages, setMessages] = useArrayState<string>([]);
-
-	// const inputIce = useRef<HTMLInputElement>(null);
-	// const inputAnswer = useRef<HTMLInputElement>(null);
-	const inputText = useRef<HTMLInputElement>(null);
-
-	React.useEffect(() => {
-		firebaseFunctions.post('clearIces', { name: userName }).then(
-			() => {
-				getICEs();
-
-				setInterval(async () => {
-					connectToNewUsers();
-				}, 4000);
-
-				// Look for answers
-				setInterval(async () => {
-					confirmAnswer();
-				}, 5000);
-			}
-		);
-	}, []);
-
-	const connectToNewUsers = async () => {
-		const { data: ices } = await firebaseFunctions.get('getIces');
-		for (const user of Object.keys(ices)) {
-			if (user === userName || connections.includes(user)) {
-				continue;
-			}
-			connections.push(user); // TODO: set it as pending
-			console.log('trying to connect to new user', user);
-			// TODO: how to chose a offer?
-			const offer = ices[user][0];
-			setupRemoteConnection(offer, user);
-		}
-		setConnections(connections);
-	};
-
-	const confirmAnswer = async () => {
-		const { data: answers } = await firebaseFunctions.get('getAnswer?user=' + userName);
-		for (const answer of Object.values<string>(answers)) {
-			await p2pAnswerCallback(answer);
-		}
-	};
-
-	const getICEs = () => {
-		localConnection = new RTCPeerConnection();
-		localConnection.onicecandidate = () => {
-
-			while (!userName) {
-				userName = prompt('What\'s your name?')!;
-			}
-			setUserName(userName);
-			console.log('Novo ICE local, mandando para o server');
-			firebaseFunctions.post('saveIce', {
-				name: userName,
-				ice: localConnection.localDescription
-			});
-
-			const newIce = JSON.stringify(localConnection.localDescription);
-			ices.push(newIce);
-			setIces(ices);
-		};
-
-
-		const sendChannel = localConnection.createDataChannel('sendChannel');
-		sendChannel.onmessage = e => {
-			messages.push(e.data);
-			setMessages(messages);
-		};
-
-		sendChannel.onopen = () => console.log('Send channel is open!!!!');
-		sendChannel.onclose = () => {
-			firebaseFunctions.post('clearIces', { name: userName });
-			console.log('Send channel is closed!!!!!!');
-		};
-
-
-		localConnection.createOffer().then(o => localConnection.setLocalDescription(o));
-
-	};
-
-	const setupRemoteConnection = (offer: any, otherUserName: string) => {
-
-		const remoteConnection = new RTCPeerConnection();
-
-		remoteConnection.onicecandidate = () => {
-			console.log('Resposta de uma conexao remota, mandando para o server');
-			const newAnswer = JSON.stringify(remoteConnection.localDescription);
-			firebaseFunctions.post('answer', { from: userName, to: otherUserName, answer: newAnswer });
-			setAnswerText('\n' + newAnswer);
-		};
-
-
-		remoteConnection.ondatachannel = event => {
-
-			const receiveChannel = event.channel;
-			// TODO: oq fazer com esse evento?
-			receiveChannel.onmessage = e => console.log('messsage received!!! ' + e.data);
-			receiveChannel.onopen = () => {
-				console.log('Conexão remota aberta!!!!');
-				// connections.push(otherUserName!);
-				// setConnections(connections);
-			};
-			receiveChannel.onclose = () => {
-				delete remoteConnections[receiveChannel.id!];
-				connections.splice(connections.indexOf(otherUserName));
-				setConnections(connections);
-				// TODO: clear ice on server
-			};
-			console.log('setupRemoteConnection -> receiveChannel', receiveChannel);
-			remoteConnections[receiveChannel.id!] = receiveChannel;
-
-		};
-
-
-		remoteConnection.setRemoteDescription(offer).then(() => console.log('Set de oferta feito'));
-
-		// create answer
-		remoteConnection.createAnswer().then(a => remoteConnection.setLocalDescription(a)).then(() =>
-			// console.log(JSON.stringify(remoteConnection.localDescription);
-			0
-		);
-		// send the anser to the client
-	};
-
-	// const p2pConnection = () => {
-	// 	if (inputIce.current?.value) {
-	// 		setupRemoteConnection(JSON.parse(inputIce.current.value));
-	// 		inputIce.current.value = '';
-	// 	}
-	// };
-
-	const p2pAnswerCallback = (answerText: string) => {
-		const answer = JSON.parse(answerText);
-		localConnection.setRemoteDescription(answer).then(
-			() => console.log('Resposta confirmada!')
-		);
-	};
-
-	// const p2pAnswerOnClick = () => {
-	// 	if (inputAnswer.current?.value) {
-	// 		const answer = JSON.parse(inputAnswer.current.value);
-	// 		inputAnswer.current.value = '';
-	// 		localConnection.setRemoteDescription(answer).then(
-	// 			() => console.log('done')
-	// 		);
-	// 	}
-	// };
-
-	const sendP2PText = () => {
-		if (inputText.current?.value) {
-			const text = inputText.current.value;
-			inputText.current.value = '';
-			console.log('conexoes ao enviar mensagem', remoteConnections);
-			const message = `${userName}: ${text}`;
-			messages.push(message);
-			setMessages(messages);
-			Object.values(remoteConnections).forEach(remoteConnection =>
-				remoteConnection.send(message)
-			);
-		}
-	};
-
 	return (
 		<>
 			<Head>
@@ -215,31 +36,7 @@ export const Home = () => {
 			</Head>
 			<Navbar />
 			<Main>
-				<h1>Hello {userName}</h1>
-				{/* <br />
-				<input ref={inputIce} type="text" />
-				<button onClick={p2pConnection}>Connect (ICE)</button>
-				<br />
-				<input ref={inputAnswer} type="text" />
-				<button onClick={p2pAnswerOnClick}>Answer (ICE)</button> */}
-				<br />
-				<input ref={inputText} type="text" />
-				<button onClick={sendP2PText} >Send to connections</button>
-				<br /><br />
-				<p style={{ fontSize: '26px' }} >Connections</p>
-				{connections.map((connection, index) =>
-					<p key={index} style={{ fontSize: '16px' }}>{connection}</p>
-				)}
-				<p style={{ fontSize: '26px' }} >Messages</p>
-				{messages.map((message, index) =>
-					<p key={index} style={{ fontSize: '16px' }}>{message}</p>
-				)}
-				<p style={{ fontSize: '26px' }} >Answer</p>
-				<p style={{ fontSize: '16px' }} >{answerText}</p>
-				<p style={{ fontSize: '26px' }} >Ices</p>
-				{ices.map((ice, index) =>
-					<p key={index} style={{ fontSize: '16px' }}>{ice}</p>
-				)}
+				<WebRTCChat />
 			</Main>
 			<Footer />
 		</>
