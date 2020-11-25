@@ -47,7 +47,8 @@
 			"error",
 			{
 				"code": 100,
-				"comments": 120
+				"comments": 120,
+				"tabWidth": 2
 			}
 		],
 		"comma-dangle": "off",
