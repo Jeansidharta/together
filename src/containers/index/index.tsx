@@ -53,7 +53,6 @@ export const Home = () => {
 				setInterval(async () => {
 					connectToNewUsers();
 				}, 4000);
-				connectToNewUsers();
 
 				// Look for answers
 				setInterval(async () => {
@@ -69,11 +68,13 @@ export const Home = () => {
 			if (user === userName || connections.includes(user)) {
 				continue;
 			}
+			connections.push(user); // TODO: set it as pending
 			console.log('connection to new user', user);
 			// TODO: how to chose a offer?
 			const offer = ices[user][0];
 			setupRemoteConnection(offer, user);
 		}
+		setConnections(connections);
 	};
 
 	const confirmAnswer = async () => {
