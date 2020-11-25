@@ -38,10 +38,10 @@ export const Home = () => {
 	const [answerText, setAnswerText] = useState<string>('None yet');
 
 	const [ices, setIces] = useArrayState<string>([]);
-	const [connections, setConnections] = useArrayState<number>([]);
+	const [connections, setConnections] = useArrayState<string>([]);
 	const [messages, setMessages] = useArrayState<string>([]);
 
-	const inputIce = useRef<HTMLInputElement>(null);
+	// const inputIce = useRef<HTMLInputElement>(null);
 	const inputAnswer = useRef<HTMLInputElement>(null);
 	const inputText = useRef<HTMLInputElement>(null);
 
@@ -49,28 +49,39 @@ export const Home = () => {
 		firebaseFunctions.post('clearIces', { name: userName }).then(
 			() => {
 				getICEs();
-				// Look for connections
-				// setInterval(async () => {
-				// 	const ices = await firebaseFunctions.get('getIces');
-				// 	for (const user of Object.keys(ices)) {
-				// 		if (user === userName) {
-				// 			continue;
-				// 		}
-				// 		// TODO: check if not connect to that user already
-				// 		// await p2pAnswerCallback(answer);
-				// 	}
-				// }, 5000);
 
-				// // Look for answers
-				// setInterval(async () => {
-				// 	const answers = await firebaseFunctions.get('answers');
-				// 	for (const answer of answers) {
-				// 		await p2pAnswerCallback(answer);
-				// 	}
-				// }, 5000);
+				setInterval(async () => {
+					connectToNewUsers();
+				}, 4000);
+				connectToNewUsers();
+
+				// Look for answers
+				setInterval(async () => {
+					confirmAnswer();
+				}, 5000);
 			}
 		);
 	}, []);
+
+	const connectToNewUsers = async () => {
+		const { data: ices } = await firebaseFunctions.get('getIces');
+		for (const user of Object.keys(ices)) {
+			if (user === userName || connections.includes(user)) {
+				continue;
+			}
+			console.log('connection to new user', user);
+			// TODO: how to chose a offer?
+			const offer = ices[user][0];
+			setupRemoteConnection(offer, user);
+		}
+	};
+
+	const confirmAnswer = async () => {
+		const { data: answers } = await firebaseFunctions.get('getAnswer?user='+userName);
+		for (const answer of Object.values<string>(answers)) {
+			await p2pAnswerCallback(answer);
+		}
+	};
 
 	const getICEs = () => {
 		localConnection = new RTCPeerConnection();
@@ -107,7 +118,7 @@ export const Home = () => {
 
 	};
 
-	const setupRemoteConnection = (offer: any) => {
+	const setupRemoteConnection = (offer: any, otherUserName: string) => {
 
 		const remoteConnection = new RTCPeerConnection();
 
@@ -115,6 +126,7 @@ export const Home = () => {
 			console.log(' NEW answer! on localconnection reprinting SDP ');
 			const newAnswer = JSON.stringify(remoteConnection.localDescription);
 			console.log(newAnswer);
+			firebaseFunctions.post('answer', { from: userName, to: otherUserName, answer: newAnswer });
 			setAnswerText('\n' + newAnswer);
 		};
 
@@ -125,12 +137,12 @@ export const Home = () => {
 			receiveChannel.onmessage = e => console.log('messsage received!!! ' + e.data);
 			receiveChannel.onopen = () => {
 				console.log('open!!!!', receiveChannel);
-				connections.push(receiveChannel.id!);
+				connections.push(otherUserName!);
 				setConnections(connections);
 			};
 			receiveChannel.onclose = () => {
 				delete remoteConnections[receiveChannel.id!];
-				connections.splice(connections.indexOf(receiveChannel.id!));
+				connections.splice(connections.indexOf(otherUserName));
 				setConnections(connections);
 				// TODO: clear ice on server
 			};
@@ -148,19 +160,19 @@ export const Home = () => {
 		// send the anser to the client
 	};
 
-	const p2pConnection = () => {
-		if (inputIce.current?.value) {
-			setupRemoteConnection(JSON.parse(inputIce.current.value));
-			inputIce.current.value = '';
-		}
-	};
-
-	// const p2pAnswerCallback = (answerText: string) => {
-	// 	const answer = JSON.parse(answerText);
-	// 	localConnection.setRemoteDescription(answer).then(
-	// 		() => console.log('done')
-	// 	);
+	// const p2pConnection = () => {
+	// 	if (inputIce.current?.value) {
+	// 		setupRemoteConnection(JSON.parse(inputIce.current.value));
+	// 		inputIce.current.value = '';
+	// 	}
 	// };
+
+	const p2pAnswerCallback = (answerText: string) => {
+		const answer = JSON.parse(answerText);
+		localConnection.setRemoteDescription(answer).then(
+			() => console.log('done')
+		);
+	};
 
 	const p2pAnswerOnClick = () => {
 		if (inputAnswer.current?.value) {
@@ -196,9 +208,9 @@ export const Home = () => {
 			<Navbar />
 			<Main>
 				<h1>Hello {userName}</h1>
-				<br />
-				<input ref={inputIce} type="text" />
-				<button onClick={p2pConnection}>Connect (ICE)</button>
+				{/* <br /> */
+				/* <input ref={inputIce} type="text" />
+				<button onClick={p2pConnection}>Connect (ICE)</button> */}
 				<br />
 				<input ref={inputAnswer} type="text" />
 				<button onClick={p2pAnswerOnClick}>Answer (ICE)</button>
