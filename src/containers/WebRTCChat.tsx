@@ -191,7 +191,13 @@ export const WebRTCChat = () => {
 		<>
 			<h1>Hello {userName}</h1>
 			<br />
-			<input ref={inputText} type="text" />
+			<input ref={inputText} onKeyDown={
+				(event) => {
+					if (event.key === 'Enter') {
+						sendMessageToEveryConnection();
+					}
+				}
+			} type="text" />
 			<button onClick={sendMessageToEveryConnection} >Send to connections</button>
 			<br /><br />
 			<p style={{ fontSize: '26px' }} >Connections</p>
