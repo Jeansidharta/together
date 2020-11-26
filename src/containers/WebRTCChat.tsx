@@ -1,4 +1,4 @@
-import Axios from 'axios';
+import axios from 'axios';
 import React, { useRef, useState } from 'react';
 import { useArrayState } from '../libs/useArrayState';
 import { useLocalStorage } from '../libs/useLocalStorage';
@@ -6,9 +6,17 @@ import { useLocalStorage } from '../libs/useLocalStorage';
 let localConnection: RTCPeerConnection;
 const remoteConnections: { [id: number]: RTCDataChannel } = {};
 
-const firebaseFunctions = Axios.create(
-	{ baseURL: 'https://us-central1-together-748f7.cloudfunctions.net/api/' }
-);
+const isProd = process.env.NODE_ENV === 'production';
+const shouldRunLocalFunction = true;
+const debugHttp = false;
+const isLocalFunction = !isProd && shouldRunLocalFunction;
+
+const baseURL = isLocalFunction ?
+	'http://localhost:5001/together-748f7/us-central1/api' :
+	'https://us-central1-together-748f7.cloudfunctions.net/api/';
+
+
+const firebaseFunctions = axios.create({ baseURL });
 
 export const WebRTCChat = () => {
 
@@ -22,26 +30,32 @@ export const WebRTCChat = () => {
 	const inputText = useRef<HTMLInputElement>(null);
 
 	React.useEffect(() => {
-		firebaseFunctions.post('clearIces', { name: userName }).then(
-			() => {
-				setupLocalConnection();
+		const usersPooling = () => {
+			setupLocalConnection();
 
-				setInterval(async () => {
-					connectToNewUsers();
-				}, 5000);
+			setInterval(async () => {
+				connectToNewUsers();
+			}, 5000);
 
-				// Look for answers
-				setInterval(async () => {
-					confirmAnswers();
-				}, 6000);
-			}
-		);
+			// Look for answers
+			setInterval(async () => {
+				confirmAnswers();
+			}, 6000);
+		};
+
+		(async () => {
+			debugHttp && userName && console.log('delete ices');
+			userName && await firebaseFunctions.delete(`ices/${userName}`);
+			usersPooling();
+		})();
+
 	}, []);
 
 	//
 
 	const connectToNewUsers = async () => {
-		const { data: ices } = await firebaseFunctions.get('getIces');
+		debugHttp && console.log('get ices/all');
+		const { data: ices } = await firebaseFunctions.get('ices/all');
 		for (const user of Object.keys(ices)) {
 			if (
 				user === userName ||
@@ -61,7 +75,8 @@ export const WebRTCChat = () => {
 	};
 
 	const confirmAnswers = async () => {
-		const { data: answers } = await firebaseFunctions.get('getAnswer?user=' + userName);
+		debugHttp && console.log('get answer');
+		const { data: answers } = await firebaseFunctions.get(`answer/${userName}`);
 		for (const answer of Object.values<string>(answers)) {
 			await confirmAnswer(answer);
 		}
@@ -77,7 +92,7 @@ export const WebRTCChat = () => {
 			}
 			setUserName(userName);
 			console.log('Novo ICE local, mandando para o server');
-			firebaseFunctions.post('saveIce', {
+			firebaseFunctions.post('ice', {
 				name: userName,
 				ice: localConnection.localDescription
 			});
@@ -112,7 +127,7 @@ export const WebRTCChat = () => {
 		remoteConnection.onicecandidate = () => {
 			console.log('Resposta de uma conexao remota, mandando para o server');
 			const newAnswer = JSON.stringify(remoteConnection.localDescription);
-			console.log('Respostar para o usuario', otherUserName, newAnswer);
+			console.log('Resposta para o usuario', otherUserName, newAnswer);
 			firebaseFunctions.post('answer', { from: userName, to: otherUserName, answer: newAnswer });
 			setAnswerText('\n' + newAnswer);
 		};
