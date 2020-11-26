@@ -144,6 +144,7 @@ export const WebRTCChat = () => {
 				// setConnections(connections);
 			};
 			receiveChannel.onclose = () => {
+				console.log('closed recieve channel connection', otherUserName);
 				delete remoteConnections[receiveChannel.id!];
 				connections.splice(connections.indexOf(otherUserName));
 				setConnections(connections);
