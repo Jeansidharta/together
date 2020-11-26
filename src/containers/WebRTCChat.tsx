@@ -24,19 +24,21 @@ export const WebRTCChat = () => {
 	React.useEffect(() => {
 		firebaseFunctions.post('clearIces', { name: userName }).then(
 			() => {
-				getICEs();
+				setupLocalConnection();
 
 				setInterval(async () => {
 					connectToNewUsers();
-				}, 4000);
+				}, 5000);
 
 				// Look for answers
 				setInterval(async () => {
-					confirmAnswer();
-				}, 5000);
+					confirmAnswers();
+				}, 6000);
 			}
 		);
 	}, []);
+
+	//
 
 	const connectToNewUsers = async () => {
 		const { data: ices } = await firebaseFunctions.get('getIces');
@@ -58,14 +60,15 @@ export const WebRTCChat = () => {
 		setConnections(connections);
 	};
 
-	const confirmAnswer = async () => {
+	const confirmAnswers = async () => {
 		const { data: answers } = await firebaseFunctions.get('getAnswer?user=' + userName);
 		for (const answer of Object.values<string>(answers)) {
-			await p2pAnswerCallback(answer);
+			await confirmAnswer(answer);
 		}
 	};
 
-	const getICEs = () => {
+	//
+	const setupLocalConnection = () => {
 		localConnection = new RTCPeerConnection();
 		localConnection.onicecandidate = () => {
 
@@ -147,14 +150,14 @@ export const WebRTCChat = () => {
 		// send the anser to the client
 	};
 
-	const p2pAnswerCallback = (answerText: string) => {
+	const confirmAnswer = (answerText: string) => {
 		const answer = JSON.parse(answerText);
 		localConnection.setRemoteDescription(answer).then(
 			() => console.log('Resposta confirmada!')
 		);
 	};
 
-	const sendP2PText = () => {
+	const sendMessageToEveryConnection = () => {
 		if (inputText.current?.value) {
 			const text = inputText.current.value;
 			inputText.current.value = '';
@@ -173,7 +176,7 @@ export const WebRTCChat = () => {
 			<h1>Hello {userName}</h1>
 			<br />
 			<input ref={inputText} type="text" />
-			<button onClick={sendP2PText} >Send to connections</button>
+			<button onClick={sendMessageToEveryConnection} >Send to connections</button>
 			<br /><br />
 			<p style={{ fontSize: '26px' }} >Connections</p>
 			{connections.map((connection, index) =>
